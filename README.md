@@ -1,6 +1,6 @@
 ---
 
-title: Streaming SQL with Materialize and AdonisJS
+title: Building a real-time web application with Materialize and AdonisJS
 tags: materialize,sql,adonisjs,streami
 image: https://user-images.githubusercontent.com/21223421/142488955-ed7de1c3-e174-471d-826c-44f48078da17.png
 status: draft
@@ -10,30 +10,22 @@ status: draft
 
 # Introduction
 
-In this tutorial, we are going to build a simple web application using [AdonisJS](https://adonisjs.com/) and integrate it with [Materialize](https://materialize.com).
+In this tutorial, we are going to build a web application using [AdonisJS](https://adonisjs.com/) and integrate it with [Materialize](https://materialize.com) to .
 
-# Prerequisits
+# Prerequisites
 
-You would need to have the following things installed before you begin:
+You need to have the following things installed before getting started:
 
-* [Install Docker and Docker Compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04)
-* [Install Node.js](https://devdojo.com/ruanbekker/install-nodejs-on-linux-using-nvm)
+* [Docker and Docker Compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04)
+* [Node.js](https://devdojo.com/ruanbekker/install-nodejs-on-linux-using-nvm)
 
 # What is Materialize
 
-**[Materialize](https://materialize.com) is a streaming database** that takes sources of data coming from sources like Kafka, PostgreSQL, S3 buckets, and more and allows you to create views that aggregate data on your event stream.
+**[Materialize](https://materialize.com) is a streaming database** that takes data coming from sources like Kafka, PostgreSQL, S3 buckets, and more and allows you to effectively transform it in real-time using SQL.
 
-The magic is that the views are translated under the hood to dataflows and it allows Materialize to maintain the views incrementally in real-time. 
+Unlike a traditional database, Materialize is able to incrementally maintain views on top of streaming data, providing fresh and correct results as new data arrives. This means that, instead of recomputing the view from scratch every time it needs to be updated, it only does work proportional to the changes in its inputs, so it is fast and efficient.
 
-A normal view would do a full scan of the data every time it needs to be updated, whereas Materialize only does the work to maintain the view based on events that come in, so it is much faster and efficient.
-
-To put this into a perspective, here is an example `SELECT` statement execute on the same data both from Materialize and PostgreSQL:
-
-* PostgreSQL result:
-![PostgreSQL count result](https://i.imgur.com/lSaxjqz.png)
-
-* Materialize result:
-![Materialize count result](https://i.imgur.com/P39HdSy.png)
+In the context of web development, Materialize can be used as a backend to power real-time applications (as we'll see in this demo)!
 
 ## Running a Materialize Demo
 
@@ -73,7 +65,7 @@ With that, you would have your Materialize instance up and running. Next we will
 
 # What is AdonisJS
 
-AdonisJS is a web framework for Node.js. It includes everything that you would need to create a fully functional web application or an API. 
+AdonisJS is a web framework for Node.js. It includes everything that you would need to create a fully functional web application or an API.
 
 AdonisJS has been inspired by Laravel and it has its own ORM, Auth support, and a CLI tool called Ace which is very similar to Artisan.
 
@@ -103,7 +95,7 @@ For this tutorial let's go with the `web` app! Using your arrow keys select `web
 
 After that you will be asked to choose a name for the project, I will leave this as `hello-materialize` but feel free to choose a different name.
 
-I will then press enter and say yest the rest of the settings:
+I will then press enter and say yes to the rest of the settings:
 
 ```
 ❯ Enter the project name · hello-materialize
@@ -127,7 +119,7 @@ And then start the webserver:
 node ace serve --watch
 ```
 
-If you are coming from the Laravel world, this would be just like running `php artisan serve`. The `ace` CLI tool is just like `artisan` and comes with a lot of the same functionalities. 
+If you are coming from the Laravel world, this would be just like running `php artisan serve`. The `ace` CLI tool is just like `artisan` and comes with a lot of the same functionalities.
 
 To check all of the `ace` commands, you can run: `node ace`.
 
@@ -153,13 +145,13 @@ In order to configure Lucid, you need to run the following `ace` command:
 node ace configure @adonisjs/lucid
 ```
 
-You will be asked to select the database driver that you want to use. As Materialize is wire compatible with PostgreSQL, make sure to select PostgreSQL!
+You will be asked to select the database driver that you want to use. As Materialize is wire-compatible with PostgreSQL, you can connect to it using any `pg` driver; here, make sure to select PostgreSQL!
 
 ```
 ![AdonisJS lucid configuration](https://user-images.githubusercontent.com/21223421/142431728-ac88085b-34cb-4ebb-83c7-b0cae9fb455d.png)
 ```
 
-Next, you will be asked to select where you want to display the configuration instructions. I would choose `In the terminal`, which would print out the necessary environment variables that you have to add to your `.env` file.
+Next, you will be asked to select where you want to display the configuration instructions. I chose `In the terminal`, which prints out the necessary environment variables that you have to add to your `.env` file.
 
 ## Configure the Materialize env variables
 
@@ -178,7 +170,7 @@ PG_DB_NAME=materialize
 
 This will allow AdonisJS to connect to Materialize just as it would when connecting to PostgreSQL.
 
-One important thing to keep in mind is that Materialize doesn’t currently support the full catalog of PostgreSQL system metadata API endpoints. This means that ORMs like Lucid, Prisma, Sequelize, or TypeORM might fail during some attempts to interact with Materialize. Once full [`pg_catalog` support is implemented](https://github.com/MaterializeInc/materialize/issues/2157), the features that depend on `pg_catalog` may work properly.
+One thing to keep in mind is that Materialize doesn’t yet support the full system catalog of PostgreSQL (we're working on it!), which means that ORMs like Lucid, Prisma, Sequelize, or TypeORM might fail during some attempts to interact with Materialize. As we work to broaden [`pg_catalog` coverage](https://github.com/MaterializeInc/materialize/issues/2157), the integration with these tools will gradually improve!
 
 # Creating a Controller
 
@@ -204,8 +196,8 @@ Your routes file is stored at `start/routes.ts`. In there we can specify our app
 
 We do not yet have the methods ready, but we know that we would need the following routes:
 
-* `/source`: When visited, this route would create a Materialize Source
-* `/view`: When visited, this route would create a materialized view
+* `/source`: When visited, this route would create a Materialize [source](https://materialize.com/docs/sql/create-source/)
+* `/view`: When visited, this route would create a [materialized view](https://materialize.com/docs/sql/create-source/)
 * `/visitors`: This route would return an event stream with all of the latest changes to our materialized view
 * `/`: This will be the landing page where we will display the streaming data that we are getting from the `/visitors` endpoint and Materialize
 
@@ -220,11 +212,11 @@ Route.get('/source', 'VisitorsController.source')
 Route.get('/view', 'VisitorsController.view')
 ```
 
-Next, let's add a method that would allow us to create a Materialize Source as described in the [Materialize Log Parsing Demo](https://github.com/bobbyiliev/mz-http-logs)!
+Next, let's add a method that would allow us to create a Materialize source as described in the [Materialize Log Parsing Demo](https://github.com/bobbyiliev/mz-http-logs)!
 
 ## Creating a Materialize Source from logs
 
-If you were accessing Materialize directly via `psql` or `mzcli`, in order to create the logs Materialize Source, you would run the following statement:
+If you were accessing Materialize directly via a SQL client (like `psql`), in order to access data from a continuously produced log file, you would execute the following statement:
 
 ```sql
 CREATE SOURCE requests
@@ -252,7 +244,7 @@ There are a few things that we would want to do:
 import Database from '@ioc:Adonis/Lucid/Database'
 ```
 
-* Then inside the VisitorsController class, let's create a method called `source` and 
+* Then inside the VisitorsController class, let's create a method called `source` and
 
 ```javascript
 // import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
@@ -275,15 +267,15 @@ export default class VisitorsController {
 }
 ```
 
-Now if you were to visit the `/source` URL via your browser (`http://127.0.0.1:3333/source`) it would create your Materialize Source:
+Now, if you were to visit the `/source` URL via your browser (`http://127.0.0.1:3333/source`) it would create your Materialize source:
 
 ![Source created](https://user-images.githubusercontent.com/21223421/142441564-24faddfb-5b3d-4ef8-8653-5156bcbea747.png)
 
 ## Creating a Materialize View
 
-You may be familiar with Materialized Views from the world of traditional databases like PostgreSQL, which are essentially cached queries. The unique feature here is the materialized view we are about to create is automatically kept up-to-date.
+You may be familiar with materialized views from the world of traditional databases like PostgreSQL, which are essentially cached queries. The unique feature here is the materialized view we are about to create is automatically kept up-to-date.
 
-Let's do the same thing for a materialized view! To do that, let's create a method called `view` with the following content:
+Let's do the same thing as before, but ro create a materialized view based on our file source! To do that, let's create a method called `view` with the following content:
 
 > Add this right after the end of the `source` method
 
@@ -292,7 +284,7 @@ Let's do the same thing for a materialized view! To do that, let's create a meth
 
         //Using Ludic to connect to Materialize, we are executing a CREATE VIEW statement
         const res = await Database.rawQuery(
-            `CREATE OR Replace MATERIALIZED VIEW unique_visitors AS
+            `CREATE OR REPLACE MATERIALIZED VIEW unique_visitors AS
              SELECT count(DISTINCT ip) FROM requests;`
             );
         return res;
@@ -300,11 +292,11 @@ Let's do the same thing for a materialized view! To do that, let's create a meth
     }
 ```
 
-Our Materialized view would show the count of the unique visitors on our demo application.
+Our materialized view would show the count of the unique visitors flowing through our demo application.
 
 To create the view, visit the `/view` URL via your browser (eg. `http://127.0.0.1:3333/view`).
 
-With that our view will be created and we can move on to the next step!
+With that, our view will be created and we can move on to the next step!
 
 ## Creating an event stream
 
@@ -336,7 +328,7 @@ However, in order to take full advantage of the incrementally updated materializ
 
 For more information about `TAIL`, make sure to check out the official documentation here:
 
-[Materialize `TAIL` statemetn](https://materialize.com/docs/sql/tail/).
+[Materialize `TAIL` statement](https://materialize.com/docs/sql/tail/).
 
 If you were to now visit the `/visitors` URL via your browser, you would see the following output:
 
@@ -410,7 +402,7 @@ A quick rundown of the main things to keep in mind:
 * `JSON.parse(e.data)`: After that we parse our data
 * `data.forEach`: Finally we run a loop and update the total unique visitors counter on the page.
 
-Now if you were to visit your AdnoisJS application you would see the following output:
+Now if you were to visit your AdonisJS application you would see the following output:
 
 ![adonisjs Materialize event source](https://user-images.githubusercontent.com/21223421/142488313-234fe614-c9f8-4e9a-bf88-e116444167fc.gif)
 
@@ -418,7 +410,7 @@ As you can see, rather than making a huge amount of AJAX requests, we just tap i
 
 # Conclusion
 
-This is pretty much it! You've not built a simple web application using AdonisJS that connects to Materialize and pulls the number of unique visitors from your application.
+This is pretty much it! You've now built a web application using AdonisJS that connects to Materialize and pulls the number of unique visitors from your application as new data is logged.
 
 As a next step, make sure to head over to the Materialize Docs and try out some of the available demos:
 
