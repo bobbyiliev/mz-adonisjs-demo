@@ -10,14 +10,17 @@ status: draft
 
 # Introduction
 
-In this tutorial, we are going to build a web application using [AdonisJS](https://adonisjs.com/) and integrate it with [Materialize](https://materialize.com) to .
+In this tutorial, we are going to build a web application using [AdonisJS](https://adonisjs.com/) and integrate it with [Materialize](https://materialize.com) to create a real-time dashboard based on streaming data using standard SQL.
+
+Materialize lets you define views you want to maintain on your data, just as you would with any SQL table, and then get the results in real-time, unlike traditional databases which frequently act as if they've never been asked that question before.
 
 # Prerequisites
 
 You need to have the following things installed before getting started:
 
-* [Docker and Docker Compose](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04)
-* [Node.js](https://devdojo.com/ruanbekker/install-nodejs-on-linux-using-nvm)
+* [Install Docker](https://docs.docker.com/get-docker/)
+* [Install Docker Compose](https://docs.docker.com/compose/install/)
+* [Install Node.js](https://nodejs.org/en/download/package-manager)
 
 # What is Materialize
 
@@ -275,7 +278,7 @@ Now, if you were to visit the `/source` URL via your browser (`http://127.0.0.1:
 
 You may be familiar with materialized views from the world of traditional databases like PostgreSQL, which are essentially cached queries. The unique feature here is the materialized view we are about to create is automatically kept up-to-date.
 
-Let's do the same thing as before, but ro create a materialized view based on our file source! To do that, let's create a method called `view` with the following content:
+Let's do the same thing as before, but to create a materialized view based on our file source! To do that, let's create a method called `view` with the following content:
 
 > Add this right after the end of the `source` method
 
@@ -422,6 +425,10 @@ To learn more about AdonisJS, you can also find the documentation here:
 
 You can find a link to the AdonisJS source code from this demo here:
 
-[Streaming Data wiht Materialize and AdonisJS Demo files]()
+[Streaming Data wiht Materialize and AdonisJS Demo files](https://github.com/bobbyiliev/mz-adonisjs-demo)
+
+To learn more about Streaming SQL, make sure to check out this post here:
+
+[Streaming SQL: What is it, why is it useful?](https://materialize.com/streaming-sql-intro/)
 
 Hope that this was helpful!
